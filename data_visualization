@@ -1,0 +1,216 @@
+# This is program is only for reference for various plotting methods
+
+# Import Standard Libraries 
+import numpy as np
+import pandas as pd
+from numpy.random import randn
+import warnings
+warnings.filterwarnings('ignore')
+
+# stats libraries
+from scipy import stats
+
+# Plotting libraries
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+url = 'http://en.wikipedia.org/wiki/Histogram'
+dataset1 = randn(100)
+# check dataset
+plt.hist(dataset1)
+
+dataset2 = randn(80)
+plt.hist(dataset2,color='indianred')
+
+plt.hist(dataset1,normed=True,color='indianred',alpha=0.5,bins=20)
+plt.hist(dataset2,normed=True,alpha=0.5,bins=20)
+
+# Try Joint plot
+data1 = randn(1000)
+data2 = randn(1000)
+sns.jointplot(data1,data2)
+sns.jointplot(data1,data2,kind='hex')  # with hex
+
+#Kernel Density Estimation Plots (Kde) For more details refer KDE wikipedia (Gaussian basis function)
+dataset = randn(25)
+sns.rugplot(dataset)
+plt.ylim(0,1)
+
+plt.hist(dataset,alpha=0.3)
+sns.rugplot(dataset)
+
+sns.rugplot(dataset)
+
+x_min = dataset.min() - 2
+x_max = dataset.max() + 2
+
+x_axis = np.linspace(x_min,x_max,100)
+
+bandwidth = ( (4*dataset.std()**5) / (3*len(dataset))) ** 0.2
+
+kernel_list = []
+
+for data_point in dataset:
+    # Create a kernel for each point and append it to kernel_list
+    kernel = stats.norm(data_point,bandwidth).pdf(x_axis)
+    kernel_list.append(kernel)
+    
+    # Scale for plotting
+    kernel = kernel / kernel.max()
+    kernel = kernel * 0.4
+    
+    plt.plot(x_axis,kernel,color='grey',alpha=0.5)
+
+plt.ylim(0,1)
+
+sum_of_kde = np.sum(kernel_list,axis=0)
+
+fig = plt.plot(x_axis,sum_of_kde,color='indianred')
+
+sns.rugplot(dataset)
+
+plt.yticks([])
+
+plt.suptitle("Sum of basis functions")
+
+sns.rugplot(dataset,color='black')
+
+for bw in np.arange(0.5,2,0.25):
+    sns.kdeplot(dataset,bw=bw,lw=1.8,label=bw)
+
+# Read url
+url = 'http://en.wikipedia.org/wiki/Kernel_(statistics)'
+kernel_options = ['biw','cos','epa','gau','tri','triw']
+
+for kern in kernel_options:
+    sns.kdeplot(dataset,kernel=kern,label=kern,shade=True)
+    
+sns.kdeplot(dataset,vertical=True)
+
+url = 'http://en.wikipedia.org/wiki/Cumulative_distribution_function'
+sns.kdeplot(dataset,cumulative = True)
+
+mean = [0,0]
+cov = [[1,0],[0,100]]
+dataset2 = np.random.multivariate_normal(mean,cov,1000)
+dframe = pd.DataFrame(dataset2,columns=['X','Y'])
+sns.kdeplot(dframe)
+
+sns.kdeplot(dframe.X,dframe.Y,shade=True)
+sns.kdeplot(dframe,bw=1)
+sns.kdeplot(dframe,bw='silverman')
+
+sns.jointplot('X','Y',dframe,kind='kde')
+
+# Combining Plot Styles
+dataset = randn(100)
+sns.distplot(dataset,bins=25)
+sns.distplot(dataset,bins=25,rug=True,hist=False)
+
+sns.distplot(dataset,bins=25,
+             kde_kws={'color':'indianred','label':'KDE PLOT'},
+             hist_kws={'color':'blue','label':'HIST'})
+           
+from pandas import Series
+ser1 = Series(dataset,name='My_data')
+ser1
+
+sns.distplot(ser1,bins=25)
+# Box and Violin Plots
+url = 'http://en.wikipedia.org/wiki/Box_plot#mediaviewer/File:Boxplot_vs_PDF.svg'
+
+data1 = randn(100)
+data2 = randn(100)
+sns.boxplot([data1,data2])
+
+sns.boxplot([data1,data2],whis=np.inf)
+# Normal Dist
+data1 = stats.norm(0,5).rvs(100)
+
+# Two gamma dist. Concatenated together
+data2 = np.concatenate([stats.gamma(5).rvs(50)-1,
+                       -1*stats.gamma(5).rvs(50)])
+
+# Box Plot both data1 and data2
+sns.boxplot([data1,data2],whis=np.inf)
+sns.violinplot(data1,data2)
+
+sns.violinplot(data2,bw=0.01)
+sns.violinplot(data1,inner='stick')
+
+# Regression Plots
+tips = sns.load_dataset('tips')
+tips.head()
+
+sns.lmplot('total_bill','tip',tips)
+sns.lmplot('total_bill','tip',tips,
+           scatter_kws={'marker':'o','color':'indianred'},
+           line_kws={'linewidth':1,'color':'blue'})
+           
+sns.lmplot('total_bill','tip',tips,order=4,
+           scatter_kws={'marker':'o','color':'indianred'},
+           line_kws={'linewidth':1,'color':'blue'})
+           
+sns.lmplot('total_bill','tip',tips,fit_reg=False)
+
+tips['tip_pect']=100*(tips['tip']/tips['total_bill'])
+tips.head()
+
+sns.lmplot('size','tip_pect',tips)
+
+url = 'http://en.wikipedia.org/wiki/jitter'
+sns.lmplot('size','tip_pect',tips,x_jitter=.1)
+
+sns.lmplot('size','tip_pect',tips,x_estimator=np.mean)
+sns.lmplot('total_bill','tip_pect',tips,hue='sex',markers=['x','o'])
+
+sns.lmplot('total_bill','tip_pect',tips,hue='day')
+
+url = 'http://en.wikipedia.org/wiki/Local_regression'
+
+sns.lmplot('total_bill','tip_pect',tips,lowess=True,line_kws={'color':'black'})
+sns.regplot('total_bill','tip_pect',tips)
+
+fig, (axis1,axis2) = plt.subplots(1,2,sharey=True)
+
+sns.regplot('total_bill','tip_pect',tips,ax=axis1)
+sns.violinplot(tips['tip_pect'],tips['size'],color='indianred',ax=axis2)
+
+# Heatmap and clustered Matrics
+flight_dframe = sns.load_dataset('flights')
+flight_dframe.head()
+
+flight_dframe = flight_dframe.pivot('month','year','passengers')
+flight_dframe
+
+sns.heatmap(flight_dframe)
+sns.heatmap(flight_dframe,annot=True,fmt='d')
+
+sns.heatmap(flight_dframe,center=flight_dframe.loc['January',1955])
+
+f,(axis1,axis2) = plt.subplots(2,1)
+yearly_flights = flight_dframe.sum()
+years = pd.Series(yearly_flights.index.values)
+years = pd.DataFrame(years)
+flights = pd.Series(yearly_flights.values)
+flights = pd.DataFrame(flights)
+year_dframe = pd.concat((years,flights),axis=1)
+year_dframe.columns = ['Year','Flights']
+sns.barplot('Year',y='Flights',data=year_dframe,ax=axis1)
+sns.heatmap(flight_dframe,cmap='Blues',ax=axis2,cbar_kws={'orientation':'horizontal'})
+
+sns.clustermap(flight_dframe)
+
+sns.clustermap(flight_dframe,col_cluster=False)
+sns.clustermap(flight_dframe,standard_scale=1)
+
+sns.clustermap(flight_dframe,standard_scale=0)
+
+sns.clustermap(flight_dframe,z_score=1)
+
+
+
+
+
