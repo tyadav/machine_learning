@@ -8,7 +8,7 @@ melbourne_data.columns
 # We'll learn to handle missing values in a later tutorial.  
 # Your Iowa data doesn't have missing values in the columns you use. 
 # So we will take the simplest option for now, and drop houses from our data. 
-# Don't worry about this much for now, though the code is:
+#  Don't worry about this much for now, though the code is:
 
 # dropna drops missing values (think of na as "not available")
 melbourne_data = melbourne_data.dropna(axis=0)
